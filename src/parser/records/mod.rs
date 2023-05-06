@@ -1,5 +1,4 @@
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct MUSC {
     pub form_id: u32,
     pub editor_id: String,
@@ -7,11 +6,10 @@ pub struct MUSC {
     pub priority: u16,
     pub ducking: u16,
     pub fade_duration: f32,
-    pub track_ids: Vec<u32>
+    pub track_ids: Vec<u32>,
 }
 
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct RecordHeader {
     pub record_type: String,
     pub size: u32,
@@ -19,5 +17,5 @@ pub struct RecordHeader {
     pub id: u32,
     pub revision: u32,
     pub version: u16,
-    pub unknown: u16
+    pub unknown: u16,
 }

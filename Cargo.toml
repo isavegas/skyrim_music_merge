@@ -1,9 +1,10 @@
 [package]
-name = "sse_music_merge"
-version = "0.1.0"
+name = "gamebryo_music_merge"
+version = "0.1.1"
 authors = ["isavegas <isavegas2006@gmail.com>"]
-description = "A tool for merging music mods for Skyrim Special Edition. Note that it will not work for the original Skyrim, currently."
+description = "A tool for merging music mods for Bethesda's gamebryo games."
+edition = "2021"
 
 [dependencies]
-winreg = "0.4"
-byteorder = "1.0.0"
+winreg = "0.10.1"
+byteorder = "1.4.3"

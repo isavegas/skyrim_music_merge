@@ -1,54 +1,51 @@
-use std::io::Write;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::Error;
+use std::io::Write;
 
+use crate::Plugin;
 
-pub use ::parser::plugin::Plugin;
-pub use ::parser::records::MUSC;
-
-fn write_ident(writer: &mut Write, ident: &str) {
+fn write_ident(writer: &mut dyn Write, ident: &str) {
     writer.write(ident.as_bytes()).unwrap();
 }
 
-fn write_zstring(writer: &mut Write, xxxx: bool, zstring: &str) {
+fn write_zstring(writer: &mut dyn Write, xxxx: bool, zstring: &str) {
     let bytes = zstring.as_bytes();
     if xxxx {
         writer.write_u16::<LittleEndian>(0).unwrap();
     } else {
-        writer.write_u16::<LittleEndian>(bytes.len() as u16 + 1).unwrap();
+        writer
+            .write_u16::<LittleEndian>(bytes.len() as u16 + 1)
+            .unwrap();
     }
     writer.write(bytes).unwrap();
     writer.write_u8(0).unwrap(); // Null terminated.
 }
 
-fn write_u8(writer: &mut Write, v: u8) {
-    writer.write_u8(v).unwrap();
-}
-
-fn write_u16(writer: &mut Write, v: u16) {
+fn write_u16(writer: &mut dyn Write, v: u16) {
     writer.write_u16::<LittleEndian>(v).unwrap();
 }
 
-fn write_i32(writer: &mut Write, v: i32) {
+fn write_i32(writer: &mut dyn Write, v: i32) {
     writer.write_i32::<LittleEndian>(v).unwrap();
 }
 
-fn write_u32(writer: &mut Write, v: u32) {
+fn write_u32(writer: &mut dyn Write, v: u32) {
     writer.write_u32::<LittleEndian>(v).unwrap();
 }
 
-fn write_f32(writer: &mut Write, v: f32) {
+fn write_f32(writer: &mut dyn Write, v: f32) {
     writer.write_f32::<LittleEndian>(v).unwrap();
 }
 
-fn write_u64(writer: &mut Write, v: u64) {
+fn write_u64(writer: &mut dyn Write, v: u64) {
     writer.write_u64::<LittleEndian>(v).unwrap();
 }
 
-pub fn write_plugin(mut writer: &mut Write, plugin: &Plugin) -> Result<(), Error> {
+pub fn write_plugin(mut writer: &mut dyn Write, plugin: &Plugin) -> Result<(), Error> {
     write_ident(&mut writer, "TES4");
     // size of the TES4 header // TODO: XXXX support
-    write_u16(&mut writer,
+    write_u16(
+        &mut writer,
         // "HEDR" + len + fields
         18
         // "CNAM" + len + str len + null
@@ -56,12 +53,14 @@ pub fn write_plugin(mut writer: &mut Write, plugin: &Plugin) -> Result<(), Error
         // "SNAM" + len + str len + null
         + 7 + plugin.description.as_bytes().len() as u16
         // each "MAST" + len + str len + null  + "DATA" + len + u64
-        + plugin.masters.iter().fold(0, |i, master| i + master.as_bytes().len() as u16 + 21)
-        // "ONAM" + len + each u32
-        /*+ 6 + plugin.overrides.len() as u16 * 4*/
-         );
+        + plugin.masters.iter().fold(0, |i, master| i + master.as_bytes().len() as u16 + 21), // "ONAM" + len + each u32
+                                                                                              /*+ 6 + plugin.overrides.len() as u16 * 4*/
+    );
     // No idea what this is about, as there's no documentation, but every esp file has it.
-    let buf: [u8; 18] = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00];
+    let buf: [u8; 18] = [
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2C,
+        0x00, 0x00, 0x00,
+    ];
     let _ = writer.write(&buf);
     write_ident(&mut writer, "HEDR");
     write_u16(&mut writer, 12);
@@ -101,7 +100,9 @@ pub fn write_plugin(mut writer: &mut Write, plugin: &Plugin) -> Result<(), Error
         //println!("Writing Music");
         write_ident(&mut writer, "GRUP");
         // get size of all MUSC values contained
-        let data_size: u32 = plugin.music.iter().fold(0, |s, musc| s + 67 + musc.editor_id.as_bytes().len() as u32 + musc.track_ids.len() as u32 * 4);
+        let data_size: u32 = plugin.music.iter().fold(0, |s, musc| {
+            s + 67 + musc.editor_id.as_bytes().len() as u32 + musc.track_ids.len() as u32 * 4
+        });
         //println!("GRUP size: {}", data_size + 24);
         write_u32(&mut writer, data_size + 24); // size (including header size)
         write_ident(&mut writer, "MUSC"); // label
@@ -112,13 +113,15 @@ pub fn write_plugin(mut writer: &mut Write, plugin: &Plugin) -> Result<(), Error
         write_u16(&mut writer, 0); // unknown
         for musc in plugin.music.iter() {
             write_ident(&mut writer, "MUSC");
-            write_u32(&mut writer, 43 + musc.editor_id.as_bytes().len() as u32 + musc.track_ids.len() as u32 * 4);
+            write_u32(
+                &mut writer,
+                43 + musc.editor_id.as_bytes().len() as u32 + musc.track_ids.len() as u32 * 4,
+            );
             write_u32(&mut writer, 0x00000000); // flags
             write_u32(&mut writer, musc.form_id); // form id. Hope to god I don't have to do this the hard way
             write_u32(&mut writer, 0); // revision
             write_u16(&mut writer, 0); // version
             write_u16(&mut writer, 0); // unknown
-            
 
             write_ident(&mut writer, "EDID");
             write_zstring(&mut writer, false, musc.editor_id.as_str());

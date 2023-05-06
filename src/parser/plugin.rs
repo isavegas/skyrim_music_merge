@@ -1,8 +1,8 @@
-use std::path::PathBuf;
-use std::path::Path;
 use std::boxed::Box;
+use std::path::Path;
+use std::path::PathBuf;
 
-use parser::MUSC;
+use crate::parser::MUSC;
 
 pub struct Plugin {
     path: Box<PathBuf>,
@@ -21,7 +21,6 @@ pub struct Plugin {
 
 impl Plugin {
     pub fn new(p: &Path) -> Plugin {
-//        let data = Box<String>::new("Test");
         Plugin {
             path: Box::new(p.to_owned()),
             name: String::from(p.file_name().unwrap().to_str().unwrap()),
@@ -29,12 +28,12 @@ impl Plugin {
             next_object_id: 0,
             author: String::from(""),
             description: String::from(""),
-            masters: vec!(),
-            overrides: vec!(),
+            masters: vec![],
+            overrides: vec![],
             intv: 0,
             incc: 0,
             version: 0.0,
-            music: vec!(),
+            music: vec![],
         }
     }
     pub fn path(&self) -> &Path {
